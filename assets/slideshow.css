@@ -1,0 +1,183 @@
+:root {
+  --x: 0,
+  --y:0
+}
+.slideshow {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid antiquewhite;
+}
+
+.slideshow .bg {
+    background-size: cover;
+    background-position: center;
+    filter: blur(10px);
+    z-index: -1;
+}
+.slideshow img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+/********************************/
+@keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      visibility: visible;
+    }
+  
+    to {
+      transform: translateX(0);
+    }
+  }
+  .slideInRight {
+    animation-name: slideInRight;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+  }
+  /********************************/
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-100%);
+      visibility: visible;
+    }
+  
+    to {
+      transform: translateX(0);
+    }
+  }
+  .slideInLeft {
+    animation-name: slideInLeft;
+    animation-duration: 1s;
+  }
+  /********************************/
+  @keyframes slideOutLeft {
+    from {
+      transform: translateX(0);
+      visibility: visible;
+    }
+  
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  .slideOutLeft {
+    animation-name: slideOutLeft;
+    animation-duration: 1s;
+  }
+
+  /********************************/
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      visibility: visible;
+    }
+  
+    to {
+      transform: translateX(100%);
+    }
+  }
+  .slideOutRight {
+    animation-name: slideOutRight;
+    animation-duration: 1s;
+  }
+/********************************/
+/********************************/
+@keyframes fadeScaleIn {
+  from {
+    /* transform: scale(0); */
+    opacity: 0;
+  }
+
+  to {
+    /* transform: scale(1); */
+    opacity: 1;
+  }
+}
+.fadeScaleIn {
+  animation-name: fadeScaleIn;
+  animation-duration: 3s;
+}
+
+@keyframes fadeScaleOut {
+  from {
+    /* transform: scale(1); */
+    opacity: 1;
+  }
+
+  to {
+    /* transform: scale(0); */
+    opacity: 0;
+  }
+}
+.fadeScaleOut {
+  animation-name: fadeScaleOut;
+  animation-duration: 3s;
+}
+/********************************/
+@keyframes flipInX {
+  from {
+    transform: perspective(400px) rotate3d(1, 0, 0, 90deg);
+    animation-timing-function: ease-in;
+    opacity: 0;
+  }
+
+  40% {
+    transform: perspective(400px) rotate3d(1, 0, 0, -20deg);
+    animation-timing-function: ease-in;
+  }
+
+  60% {
+    transform: perspective(400px) rotate3d(1, 0, 0, 10deg);
+    opacity: 1;
+  }
+
+  80% {
+    transform: perspective(400px) rotate3d(1, 0, 0, -5deg);
+  }
+
+  to {
+    transform: perspective(400px);
+  }
+}
+
+.flipInX {
+  backface-visibility: visible !important;
+  animation-name: flipInX;
+  animation-duration: 1s;
+}
+
+/* *********** */
+.slide_fade_x_in {
+  transform: translateX(0) !important;
+  /* visibility: visible !important; */
+  opacity: 1 !important;
+  transition: all .5s ease-in;
+}
+
+.initial_state {
+  transform: translateX(25%);
+  /* visibility: hidden; */
+  opacity: 0;
+}
+
+
+
+@keyframes teso {
+  /* from {
+    transform:translateY(-100%);opacity:0;
+  } */
+
+  to {
+    transform:translateY(0);
+    opacity:1;
+  }
+}
+.teso {
+  animation-name: teso;
+  animation-duration: 1s;
+  animation-fill-mode: forwards;
+  
+}
+

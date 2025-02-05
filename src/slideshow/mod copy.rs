@@ -1,6 +1,8 @@
+use animation::Animated;
 use dioxus::{logger::tracing::info, prelude::*};
 //use dioxus_sdk::utils::timing::{use_debounce, use_interval};
-use animation::*;
+use animation::animate;
+use animation::Animation;
 use std::time::Duration;
 use std::{cell::RefCell, rc::Rc};
 
@@ -8,84 +10,51 @@ pub mod animation;
 
 const CSS: Asset = asset!("/assets/slideshow.css");
 
-#[derive(Debug, Clone, PartialEq, Props)]
 pub struct Slideshow {
     slides: Vec<&'static str>,
+    amimation: Animation,
     slide_duration: u64,
-    anim_duration: u64,
-    enter: &'static str,
-    leave: &'static str,
-    enter_back: &'static str,
-    leave_back: &'static str,
-    style: Option<String>,
 }
 
 impl Slideshow {
     pub fn new(slides: Vec<&'static str>) -> Self {
         Self {
             slides,
-            enter: "slideInLeft",
-            leave: "slideOutRight",
-            enter_back: "slideInRight",
-            leave_back: "slideOutLeft",
+            amimation: Animation::SlideXLeft,
             slide_duration: 3_000,
-            style: Some("".to_string()),
-            anim_duration: 3_000,
         }
     }
 
-    pub fn enter(mut self, enter: &'static str) -> Self {
-        self.enter = enter;
-        self.enter_back = enter;
-        self
-    }
-
-    pub fn leave(mut self, leave: &'static str) -> Self {
-        self.leave = leave;
-        self.leave_back = leave;
-        self
-    }
-
-    pub fn enter_back(mut self, enter_back: &'static str) -> Self {
-        self.enter_back = enter_back;
-        self
-    }
-
-    pub fn leave_back(mut self, leave_back: &'static str) -> Self {
-        self.leave_back = leave_back;
-        self
-    }
-
-    pub fn set_current_fixed(mut self) -> Self {
-        self.leave = "";
-        self.leave_back = "";
-        self
-    }
-
-    pub fn slide_duration(mut self, slide_duration: u64) -> Self {
-        self.slide_duration = slide_duration;
-        self
-    }
-
-    pub fn anim_duration(mut self, anim_duration: u64) -> Self {
-        let dur = format!("animation-duration:{}ms;", anim_duration);
-        self.style.as_mut().unwrap().push_str(dur.as_str());
+    pub fn animation(mut self, animation: Animation) -> Self {
+        self.amimation = animation;
         self
     }
 
     pub fn render(self) -> Element {
         rsx! {
-            {SlideshowView(self)}
+            SlideshowView {
+                slides: self.slides,
+                animation: self.amimation,
+                slide_duration: self.slide_duration,
+            }
         }
     }
 }
 
-//#[component]
-pub fn SlideshowView(props: Slideshow) -> Element {
-    let last = Rc::new(props.slides.len() - 1);
+#[component]
+pub fn SlideshowView(
+    slides: Vec<&'static str>,
+    animation: Animation,
+    //anim_duration: &'static str,
+    slide_duration: u64,
+) -> Element {
+    let last = Rc::new(slides.len() - 1);
+    let animation = Rc::new(animation);
     let mut forward = use_signal(|| true);
     let mut in_anim_class = use_signal(|| "");
     let mut out_anim_class = use_signal(|| "");
+    // let mut in_anim_class_back = use_signal(|| "");
+    // let mut out_anim_class_back = use_signal(|| "");
 
     let mut current_slide: Signal<isize> = use_signal(|| -1);
 
@@ -129,12 +98,15 @@ pub fn SlideshowView(props: Slideshow) -> Element {
         }
     }));
 
-    let mut interval = use_interval(Duration::from_millis(props.slide_duration), {
+    let mut interval = use_interval(Duration::from_millis(slide_duration), {
         let move_slide = move_slide.clone();
+        let animation = animation.clone();
         move || {
             move_slide.borrow_mut()();
-            in_anim_class.set(props.enter);
-            out_anim_class.set(props.leave);
+            // in_anim_class.set("slideInLeft");
+            // out_anim_class.set("slideOutRight");
+            in_anim_class.set(animation.get().enter);
+            out_anim_class.set(animation.get().leave);
         }
     });
 
@@ -152,6 +124,7 @@ pub fn SlideshowView(props: Slideshow) -> Element {
 
     let mut move_slide_manual = {
         let move_slide = move_slide.clone();
+        let animation = animation.clone();
 
         move || {
             interval.cancel();
@@ -161,13 +134,18 @@ pub fn SlideshowView(props: Slideshow) -> Element {
                 move_slide.borrow_mut()();
             }
             move_slide.borrow_mut()();
-            in_anim_class.set(props.enter);
-            out_anim_class.set(props.leave);
+            in_anim_class.set(animation.get().enter);
+            out_anim_class.set(animation.get().leave);
+            // spawn(async move {
+            //     gloo_timers::future::sleep(Duration::from_secs(3)).await;
+            //     interval.resume();
+            // });
         }
     };
 
     let mut back = {
         let move_slide = move_slide.clone();
+        let animation = animation.clone();
         move || {
             interval.cancel();
             if forward() {
@@ -176,8 +154,8 @@ pub fn SlideshowView(props: Slideshow) -> Element {
                 move_slide.borrow_mut()();
             }
             move_slide.borrow_mut()();
-            in_anim_class.set(props.enter_back);
-            out_anim_class.set(props.leave_back);
+            in_anim_class.set(animation.get().enter_back);
+            out_anim_class.set(animation.get().leave_back);
         }
     };
 
@@ -189,21 +167,21 @@ pub fn SlideshowView(props: Slideshow) -> Element {
             height: "500px",
             max_width: "100%",
             div { class: "bg absolute" }
-            for (id , src) in props.slides.iter().enumerate() {
+            for (id , src) in slides.iter().enumerate() {
                 if id as isize == current_slide() {
                     Slide {
                         src,
                         id,
+                        // anim_class: in_anim_class,
                         anim_class: out_anim_class,
-                        anim_style: props.style.as_ref().unwrap(),
                         z_index: 0,
                     }
                 } else if id as isize == next_slide() {
                     Slide {
                         src,
                         id,
+                        // anim_class: out_anim_class,
                         anim_class: in_anim_class,
-                        anim_style: props.style.as_ref().unwrap(),
                         z_index: 1,
                     }
                 }
@@ -217,15 +195,9 @@ pub fn SlideshowView(props: Slideshow) -> Element {
 }
 
 #[component]
-pub fn Slide(
-    src: String,
-    id: usize,
-    anim_class: String,
-    anim_style: String,
-    z_index: usize,
-) -> Element {
+pub fn Slide(src: String, id: usize, anim_class: String, z_index: usize) -> Element {
     rsx! {
-        div { class: "absolute {anim_class}", style: anim_style, z_index,
+        div { class: "absolute {anim_class}", z_index,
             img { src, loading: "lazy" }
         }
     }

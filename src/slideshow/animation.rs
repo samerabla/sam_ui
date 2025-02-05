@@ -9,72 +9,6 @@ use web_sys::{
 
 const CSS: Asset = asset!("/assets/slideshow.css");
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Animation {
-    SlideXLeft,
-    SlideXRight,
-    FadeScale,
-    Any {
-        enter: &'static str,
-        leave: &'static str,
-        enter_back: &'static str,
-        leave_back: &'static str,
-    },
-}
-
-impl Animation {
-    pub fn get(&self) -> AnimationSet {
-        use Animation::*;
-        match &self {
-            SlideXLeft => AnimationSet::new(
-                "slideInLeft",
-                "slideOutRight",
-                "slideInRight",
-                "slideOutLeft",
-            ),
-            SlideXRight => AnimationSet::new(
-                "slideInRight",
-                "slideOutLeft",
-                "slideInLeft",
-                "slideOutRight",
-            ),
-            FadeScale => {
-                AnimationSet::new("fadeScaleIn", "fadeScaleOut", "fadeScaleIn", "fadeScaleOut")
-            }
-            Animation::Any {
-                enter,
-                leave,
-                enter_back,
-                leave_back,
-            } => AnimationSet::new(enter, leave, enter_back, leave_back),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct AnimationSet {
-    pub enter: &'static str,
-    pub leave: &'static str,
-    pub enter_back: &'static str,
-    pub leave_back: &'static str,
-}
-
-impl AnimationSet {
-    pub fn new(
-        enter: &'static str,
-        leave: &'static str,
-        enter_back: &'static str,
-        leave_back: &'static str,
-    ) -> Self {
-        Self {
-            enter,
-            leave,
-            enter_back,
-            leave_back,
-        }
-    }
-}
-
 /////////////////////////////////////////////////////////////////////
 
 pub struct Elem(pub Option<web_sys::Element>);
@@ -264,9 +198,8 @@ pub fn animate<T>(
 {
     // Apply the animation class
     if let Some(elem) = selector.into().0 {
-        elem.class_list()
-            .add_1(animation_class)
-            .expect("Failed to add animation class");
+        elem.class_list().add_1(animation_class).ok();
+        //.expect("Failed to add animation class");
 
         // Modify only dynamic properties
         if let Some(style) = animation_style {
@@ -385,35 +318,6 @@ pub fn AnimatedStaggered(props: AnimatedProps) -> Element {
             props.interval,
             None::<fn()>,
         );
-        // Some(move || {
-        //     if let Some(elem) = Elem::from(id_selector()).0 {
-        //         let child_elements = elem.children();
-        //         for i in 0..child_elements.length() {
-        //             if let Some(child) = child_elements.item(i) {
-        //                 // Remove the added classes
-        //                 child.class_list().remove_1(props.to).ok();
-        //                 child.class_list().remove_1(props.from).ok();
-
-        //                 // Remove the "class" attribute if it's empty (or only whitespace)
-        //                 if let Some(class_value) = child.get_attribute("class") {
-        //                     if class_value.trim().is_empty() {
-        //                         child.remove_attribute("class").ok();
-        //                     }
-        //                 }
-
-        //                 // Remove the added style
-        //                 if let Some(style) = child.get_attribute("style") {
-        //                     let stl: Vec<&str> = style.split("animation-delay").collect();
-        //                     if let Some(origin) = stl.get(0) {
-        //                         if !origin.is_empty() {
-        //                             child.set_attribute("style", origin).ok();
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }),
     });
     rsx! {
         document::Stylesheet { href: "{CSS}" }
@@ -444,7 +348,6 @@ pub fn AnimatedStaggered(props: AnimatedProps) -> Element {
 #[component]
 pub fn AnimatedOnDisplay(props: AnimatedProps) -> Element {
     let mut elem: Signal<Option<web_sys::Element>> = use_signal(|| None);
-    //*************************** */
     let mut is_visible = use_signal(|| false);
     let mut observer: Signal<Option<IntersectionObserver>> = use_signal(|| None);
 

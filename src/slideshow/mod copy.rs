@@ -169,7 +169,7 @@ pub fn SlideshowView(
             div { class: "bg absolute" }
             for (id , src) in slides.iter().enumerate() {
                 if id as isize == current_slide() {
-                    Slide {
+                    Slide { //----
                         src,
                         id,
                         // anim_class: in_anim_class,
